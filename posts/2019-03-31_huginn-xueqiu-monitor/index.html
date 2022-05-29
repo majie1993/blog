@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="Jeff"/>
+
+  
+  <meta name="description" content="2022/04/17 更新 我目前使用的方案是 rsshub，自己部署 freshrss，使用 reeder 订阅。稳定性和易用性都比下面的方案好了，更推荐。 工作的时候没法做到时刻经常刷雪球，但是又不想错过某个用户的发言怎么办呢？解决办法就"/>
+  
+
+  
+  
+  <meta name="keywords" content="code, life, trip"/>
+  
+
+  
+  <link rel="canonical" href="https://blog.codinging.com/posts/2019-03-31_huginn-xueqiu-monitor/"/>
+
+  
+
+  <title>使用 huginn 关注雪球用户发言 &middot; Yet Another Wizard</title>
+
+  <link rel="shortcut icon" href="https://blog.codinging.com/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://blog.codinging.com/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://blog.codinging.com/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://blog.codinging.com/css/zozo.css"/>
+  <link rel="stylesheet" href="https://blog.codinging.com/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="/" class="long_long">Yet Another Wizard</a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title"></p>
+      <div class="my_socials">
+        
+        
+        <a href="https://github.com/majie1993" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        
+        <a href="https://weibo.com/jeffma1993" title="weibo" target="_blank"><i class="remixicon-weibo-fill"></i></a>
+        
+        
+        <a href="https://blog.codinging.com/index.xml" type="application/rss+xml" title="rss" target="_blank"><i class="remixicon-rss-fill"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/2019-03-31_huginn-xueqiu-monitor/'>使用 huginn 关注雪球用户发言</a></h2>
+          <span class="date">2019.03.31</span>
+        </div>
+        <div class="post_content markdown"><h2 id="20220417-更新">2022/04/17 更新</h2>
+<p>我目前使用的方案是 <a href="https://docs.rsshub.app/finance.html#xue-qiu">rsshub</a>，自己部署 freshrss，使用 reeder 订阅。稳定性和易用性都比下面的方案好了，更推荐。</p>
+<hr>
+<p>工作的时候没法做到时刻经常刷雪球，但是又不想错过某个用户的发言怎么办呢？解决办法就是 huginn + 钉钉群。
+<a href="https://github.com/huginn/huginn">huginn</a> 负责信息抓取、处理和调用钉钉群组机器人的 API，每 10 分钟在服务器上跑一次（过短可能触发雪球的防爬虫机制，我没有测试更短的间隔）。钉钉用来看消息。实现的效果如下图：
+<img src="https://i.loli.net/2020/03/08/7PVxZyOwlKh294C.png" alt=""></p>
+<h2 id="部署-huginn">部署 huginn</h2>
+<p>部署 huginn 需要一台 vps，推荐购买 <a href="https://www.linode.com/?r=338fb3f24f6fcc1dc4618f604eebdfb746b2331a">linode</a> 的机器。注意不能选择那些内存过小（如 128M）的 vps，huginn 对机器的要求稍微有些高
+使用 docker 的部署方式可以选择用 iOS 上的 hyperapp 一键完成</p>
+<h2 id="雪球-scenario">雪球 scenario</h2>
+<p>整体结构图如下：
+<img src="https://i.loli.net/2020/03/08/9ozM2FwsYyQuDK6.png" alt="">
+此处以抓取财主的发言做为例子</p>
+<h3 id="0-维护雪球-cookie">0. 维护雪球 cookie</h3>
+<p>新建一个 post agent，每 2 小时运行一次：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;post_url&#34;</span>: <span style="color:#e6db74">&#34;https://xueqiu.com&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;expected_receive_period_in_days&#34;</span>: <span style="color:#e6db74">&#34;1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;content_type&#34;</span>: <span style="color:#e6db74">&#34;form&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;method&#34;</span>: <span style="color:#e6db74">&#34;get&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;payload&#34;</span>: {
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;headers&#34;</span>: {
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;emit_events&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;no_merge&#34;</span>: <span style="color:#e6db74">&#34;false&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;output_mode&#34;</span>: <span style="color:#e6db74">&#34;clean&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;disable_redirect_follow&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这一步核心目的是模拟登录一次雪球，获取到雪球自己主页的 js 回写的 cookie
+然后去新建一个 credential，名叫 xueqiu_cookie。接一个 javascript agent</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#a6e22e">Agent</span>.<span style="color:#a6e22e">receive</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">events</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">incomingEvents</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">events</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">cookies</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">events</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">payload</span>.<span style="color:#a6e22e">headers</span>[<span style="color:#e6db74">&#39;Set-Cookie&#39;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">cookies</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">cookies</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">credential</span>(<span style="color:#e6db74">&#39;xueqiu_cookie&#39;</span>, <span style="color:#a6e22e">cookies</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这段 js 会把上一个 agent 获取到的 cookie 写到我们自己的 xueqiu_cookie 变量上</p>
+<h3 id="1-获取财主雪球主页列表">1. 获取财主雪球主页列表</h3>
+<p>接口可以通过 chrome 调试雪球的 PC 网站看到，就是一个普通的 get 请求。注意需要带上特定的 cookie
+新建一个 Website Agent，配置内容：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;expected_update_period_in_days&#34;</span>: <span style="color:#e6db74">&#34;2&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;https://xueqiu.com/v4/statuses/user_timeline.json?page=1&amp;user_id=9650668145&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;json&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;mode&#34;</span>: <span style="color:#e6db74">&#34;on_change&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;extract&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;title&#34;</span>: {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;path&#34;</span>: <span style="color:#e6db74">&#34;statuses[*].description&#34;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;retweeted&#34;</span>: {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;path&#34;</span>: <span style="color:#e6db74">&#34;statuses[*].retweeted_status&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;template&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;retweeted&#34;</span>: <span style="color:#e6db74">&#34;{% if retweeted %}{{ retweeted.description }}{% else %}{% endif %}&#34;</span>
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;headers&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;Cookie&#34;</span>: <span style="color:#e6db74">&#34;{% credential xueqiu_cookie %}&#34;</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>数据解析用的是 <a href="https://goessner.net/articles/JsonPath/">jsonpath</a>，template 字段可以对 jsonpath 得到的 value 做进一步的处理，而且可以写简单的逻辑。比如我这里的处理是过滤了 retweeted 为 null 的情况</p>
+<h3 id="2-将获取到的-html-转为-markdown">2. 将获取到的 html 转为 markdown</h3>
+<p>钉钉的群机器人接口支持 markdown 的渲染，所以这一步需要将雪球接口里获取到的 html 内容转为 markdown
+至于如何用 js 实现这个转换，可以去 github 上搜索，相应的库并不少。但是因为 huginn 无法使用 npm 和引入外部的 js，所以我这里找了一个非常简单的实现去做转换
+新建一个 huginn 的 javascript agent，js 的部分如下。这里我改了原脚本对 img 的处理，直接去掉了所有图片，原因是钉钉不支持 markdown 对图片大小的调整</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">toMarkdown</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">string</span>) {
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ELEMENTS</span> <span style="color:#f92672">=</span> [
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">patterns</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;p&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">attrs</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;\n\n&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">patterns</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;br&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;void&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;\n&#39;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">patterns</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;h([1-6])&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">hLevel</span>, <span style="color:#a6e22e">attrs</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">hPrefix</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">hLevel</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">hPrefix</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;#&#39;</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;\n\n&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">hPrefix</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39; &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">patterns</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;hr&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;void&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;\n\n* * *\n&#39;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">patterns</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;a&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">attrs</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">href</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">attrs</span>.<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">attrRegExp</span>(<span style="color:#e6db74">&#39;href&#39;</span>)),
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">title</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">attrs</span>.<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">attrRegExp</span>(<span style="color:#e6db74">&#39;title&#39;</span>));
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">href</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;[&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;]&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;(&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">href</span>[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">+</span> (<span style="color:#a6e22e">title</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">title</span>[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39; &#34;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">title</span>[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#34;&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&#39;</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;)&#39;</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">str</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">patterns</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;b&#39;</span>, <span style="color:#e6db74">&#39;strong&#39;</span>],
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">attrs</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;**&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;**&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">patterns</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;i&#39;</span>, <span style="color:#e6db74">&#39;em&#39;</span>],
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">attrs</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;_&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;_&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">patterns</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;code&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">attrs</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;`&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;`&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">patterns</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;img&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;void&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">attrs</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">src</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">attrs</span>.<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">attrRegExp</span>(<span style="color:#e6db74">&#39;src&#39;</span>)),
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">alt</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">attrs</span>.<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">attrRegExp</span>(<span style="color:#e6db74">&#39;alt&#39;</span>)),
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">title</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">attrs</span>.<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">attrRegExp</span>(<span style="color:#e6db74">&#39;title&#39;</span>));
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// return &#39;![&#39; + (alt &amp;&amp; alt[1] ? alt[1] : &#39;&#39;) + &#39;]&#39; + &#39;(&#39; + src[1] + (title &amp;&amp; title[1] ? &#39; &#34;&#39; + title[1] + &#39;&#34;&#39; : &#39;&#39;) + &#39;)&#39;;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  ];
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">len</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ELEMENTS</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">len</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">ELEMENTS</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">patterns</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">string</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">replaceEls</span>(<span style="color:#a6e22e">string</span>, { <span style="color:#a6e22e">tag</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ELEMENTS</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">patterns</span>, <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ELEMENTS</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">replacement</span>, <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span>  <span style="color:#a6e22e">ELEMENTS</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">type</span> });
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">j</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">pLen</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ELEMENTS</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">patterns</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">j</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">pLen</span>; <span style="color:#a6e22e">j</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">string</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">replaceEls</span>(<span style="color:#a6e22e">string</span>, { <span style="color:#a6e22e">tag</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ELEMENTS</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">patterns</span>[<span style="color:#a6e22e">j</span>], <span style="color:#a6e22e">replacement</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ELEMENTS</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">replacement</span>, <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span>  <span style="color:#a6e22e">ELEMENTS</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">type</span> });
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">replaceEls</span>(<span style="color:#a6e22e">html</span>, <span style="color:#a6e22e">elProperties</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">pattern</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">elProperties</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;void&#39;</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;&lt;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">elProperties</span>.<span style="color:#a6e22e">tag</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\\b([^&gt;]*)\\/?&gt;&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&lt;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">elProperties</span>.<span style="color:#a6e22e">tag</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\\b([^&gt;]*)&gt;([\\s\\S]*?)&lt;\\/&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">elProperties</span>.<span style="color:#a6e22e">tag</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&gt;&#39;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">regex</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> RegExp(<span style="color:#a6e22e">pattern</span>, <span style="color:#e6db74">&#39;gi&#39;</span>),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">markdown</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">elProperties</span>.<span style="color:#a6e22e">replacement</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">markdown</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">html</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#a6e22e">regex</span>, <span style="color:#a6e22e">elProperties</span>.<span style="color:#a6e22e">replacement</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">markdown</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">html</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#a6e22e">regex</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">p1</span>, <span style="color:#a6e22e">p2</span>, <span style="color:#a6e22e">p3</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">elProperties</span>.<span style="color:#a6e22e">replacement</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">p1</span>, <span style="color:#a6e22e">p2</span>, <span style="color:#a6e22e">p3</span>);
+</span></span><span style="display:flex;"><span>      });
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">markdown</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">attrRegExp</span>(<span style="color:#a6e22e">attr</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> RegExp(<span style="color:#a6e22e">attr</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\\s*=\\s*[&#34;\&#39;]?([^&#34;\&#39;]*)[&#34;\&#39;]?&#39;</span>, <span style="color:#e6db74">&#39;i&#39;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Pre code blocks
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">string</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/&lt;pre\b[^&gt;]*&gt;`([\s\S]*)`&lt;\/pre&gt;/gi</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">innerHTML</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^\t+/g</span>, <span style="color:#e6db74">&#39;  &#39;</span>); <span style="color:#75715e">// convert tabs to spaces (you know it makes sense)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">innerHTML</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\n/g</span>, <span style="color:#e6db74">&#39;\n    &#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;\n\n    &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Lists
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Escape numbers that could trigger an ol
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// If there are more than three spaces before the code, it would be in a pre tag
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// Make sure we are escaping the period not matching any character
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">string</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^(\s{0,3}\d+)\. /g</span>, <span style="color:#e6db74">&#39;$1\\. &#39;</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Converts lists that have no child lists (of same type) first, then works it&#39;s way up
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">noChildrenRegex</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/&lt;(ul|ol)\b[^&gt;]*&gt;(?:(?!&lt;ul|&lt;ol)[\s\S])*?&lt;\/\1&gt;/gi</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span>(<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">noChildrenRegex</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">string</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#a6e22e">noChildrenRegex</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">replaceLists</span>(<span style="color:#a6e22e">str</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">replaceLists</span>(<span style="color:#a6e22e">html</span>) {
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">html</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">html</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/&lt;(ul|ol)\b[^&gt;]*&gt;([\s\S]*?)&lt;\/\1&gt;/gi</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">listType</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">lis</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">innerHTML</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#39;&lt;/li&gt;&#39;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">lis</span>.<span style="color:#a6e22e">splice</span>(<span style="color:#a6e22e">lis</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">for</span>(<span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">len</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lis</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">len</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">lis</span>[<span style="color:#a6e22e">i</span>]) {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">prefix</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">listType</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;ol&#39;</span>) <span style="color:#f92672">?</span> (<span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;.  &#34;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;*   &#34;</span>;
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">lis</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">lis</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\s*&lt;li[^&gt;]*&gt;([\s\S]*)/i</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">innerHTML</span>) {
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">innerHTML</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^\s+/</span>, <span style="color:#e6db74">&#39;&#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">innerHTML</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\n\n/g</span>, <span style="color:#e6db74">&#39;\n\n    &#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// indent nested lists
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">innerHTML</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\n([ ]*)+(\*|\d+\.) /g</span>, <span style="color:#e6db74">&#39;\n$1    $2 &#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">prefix</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">innerHTML</span>;
+</span></span><span style="display:flex;"><span>          });
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">lis</span>.<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#39;\n&#39;</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;\n\n&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">html</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/[ \t]+\n|\s+$/g</span>, <span style="color:#e6db74">&#39;&#39;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Blockquotes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">deepest</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/&lt;blockquote\b[^&gt;]*&gt;((?:(?!&lt;blockquote)[\s\S])*?)&lt;\/blockquote&gt;/gi</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span>(<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">deepest</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">string</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#a6e22e">deepest</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">replaceBlockquotes</span>(<span style="color:#a6e22e">str</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">replaceBlockquotes</span>(<span style="color:#a6e22e">html</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">html</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">html</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/&lt;blockquote\b[^&gt;]*&gt;([\s\S]*?)&lt;\/blockquote&gt;/gi</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">inner</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">inner</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">inner</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^\s+|\s+$/g</span>, <span style="color:#e6db74">&#39;&#39;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">inner</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">cleanUp</span>(<span style="color:#a6e22e">inner</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">inner</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">inner</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^/gm</span>, <span style="color:#e6db74">&#39;&gt; &#39;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">inner</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">inner</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^(&gt;([ \t]{2,}&gt;)+)/gm</span>, <span style="color:#e6db74">&#39;&gt; &gt;&#39;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">inner</span>;
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">html</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">cleanUp</span>(<span style="color:#a6e22e">string</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">string</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^[\t\r\n]+|[\t\r\n]+$/g</span>, <span style="color:#e6db74">&#39;&#39;</span>); <span style="color:#75715e">// trim leading/trailing whitespace
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">string</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\n\s+\n/g</span>, <span style="color:#e6db74">&#39;\n\n&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">string</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\n{3,}/g</span>, <span style="color:#e6db74">&#39;\n\n&#39;</span>); <span style="color:#75715e">// limit consecutive linebreaks to 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">string</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">cleanUp</span>(<span style="color:#a6e22e">string</span>);
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">exports</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;object&#39;</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">toMarkdown</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">toMarkdown</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Agent</span>.<span style="color:#a6e22e">receive</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">events</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">incomingEvents</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">events</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">createEvent</span>({ <span style="color:#e6db74">&#39;title&#39;</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">toMarkdown</span>(<span style="color:#a6e22e">events</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">payload</span>.<span style="color:#a6e22e">title</span>), <span style="color:#e6db74">&#39;retweeted&#39;</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">toMarkdown</span>(<span style="color:#a6e22e">events</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">payload</span>.<span style="color:#a6e22e">retweeted</span>) });
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="3-推送消息到钉钉群">3. 推送消息到钉钉群</h3>
+<p>新建一个 huginn 的 Post Agent，配置如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;post_url&#34;</span>: <span style="color:#e6db74">&#34;{% credential ding_url %}&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;expected_receive_period_in_days&#34;</span>: <span style="color:#e6db74">&#34;1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;content_type&#34;</span>: <span style="color:#e6db74">&#34;json&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;method&#34;</span>: <span style="color:#e6db74">&#34;post&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;payload&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;msgtype&#34;</span>: <span style="color:#e6db74">&#34;markdown&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;markdown&#34;</span>: <span style="color:#e6db74">&#34;{\&#34;title\&#34;:\&#34;{{title | escape}}\&#34;,\&#34;text\&#34;:\&#34;#### {{title | escape}}  \\n &gt; {{retweeted | escape}} \&#34;}&#34;</span>
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;headers&#34;</span>: {
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;emit_events&#34;</span>: <span style="color:#e6db74">&#34;false&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;no_merge&#34;</span>: <span style="color:#e6db74">&#34;false&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;output_mode&#34;</span>: <span style="color:#e6db74">&#34;clean&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>credential 里是我的钉钉群机器人的 url，这个 url 在添加群机器人后可以获得
+这里需要注意的是每个字段都需要做 escape，如 <code>{{title | escape}}</code> 。效果也可以随意调整，钉钉的文档在 <a href="https://open-doc.dingtalk.com/microapp/serverapi2/qf2nxq#a-nameytovydamarkdown%E7%B1%BB%E5%9E%8B">这里</a></p>
+</div>
+        <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://blog.codinging.com/tags/workflow/">workflow</a>
+                
+              </span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      
+      
+<div class="doc_comments">
+  <div class="comments_block_title">发表评论</div>
+  <div id="vcomments"></div>
+</div>
+
+<link rel="stylesheet" href="https://blog.codinging.com/css/comments.css"/>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+
+<script type="text/javascript">
+new Valine({
+  el: '#vcomments',
+  appId: '1ieWDxB9v8IjrDqTMU6NonHS-MdYXbMMI',
+  appKey: 'WwRCTVBDUTlkv84IaTXKRmjP',
+  placeholder: '',
+  visitor: 'true',
+  serverURLs: 'https:\/\/1iewdxb9.api.lncldglobal.com',
+})
+</script>
+
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://zeuk.me">Designed by Zeuk,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>永远走大道，大道人少</span>
+  </div>
+</footer>
+
+
+
+<script src="https://blog.codinging.com/js/jquery-3.3.1.min.js"></script>
+<script src="https://blog.codinging.com/js/zozo.js"></script>
+<script src="https://blog.codinging.com/js/highlight.pack.js"></script>
+<link  href="https://blog.codinging.com/css/fancybox.min.css" rel="stylesheet">
+<script src="https://blog.codinging.com/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-32687370-2', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+</body>
+</html>

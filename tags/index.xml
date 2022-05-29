@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Yet Another Wizard</title>
+    <link>https://blog.codinging.com/tags/</link>
+    <description>Recent content in Tags on Yet Another Wizard</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Sat, 16 Apr 2022 00:00:00 +0800</lastBuildDate><atom:link href="https://blog.codinging.com/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>life</title>
+      <link>https://blog.codinging.com/tags/life/</link>
+      <pubDate>Sat, 16 Apr 2022 00:00:00 +0800</pubDate>
+      
+      <guid>https://blog.codinging.com/tags/life/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>trip</title>
+      <link>https://blog.codinging.com/tags/trip/</link>
+      <pubDate>Tue, 28 Jan 2020 00:00:00 +0800</pubDate>
+      
+      <guid>https://blog.codinging.com/tags/trip/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>workflow</title>
+      <link>https://blog.codinging.com/tags/workflow/</link>
+      <pubDate>Sun, 31 Mar 2019 00:00:00 +0800</pubDate>
+      
+      <guid>https://blog.codinging.com/tags/workflow/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>apple</title>
+      <link>https://blog.codinging.com/tags/apple/</link>
+      <pubDate>Tue, 01 Aug 2017 00:00:00 +0800</pubDate>
+      
+      <guid>https://blog.codinging.com/tags/apple/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>synology</title>
+      <link>https://blog.codinging.com/tags/synology/</link>
+      <pubDate>Tue, 25 Jul 2017 00:00:00 +0800</pubDate>
+      
+      <guid>https://blog.codinging.com/tags/synology/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

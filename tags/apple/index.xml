@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>apple on Yet Another Wizard</title>
+    <link>https://blog.codinging.com/tags/apple/</link>
+    <description>Recent content in apple on Yet Another Wizard</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Tue, 01 Aug 2017 00:00:00 +0800</lastBuildDate><atom:link href="https://blog.codinging.com/tags/apple/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Apple ID 转美国区</title>
+      <link>https://blog.codinging.com/posts/appleid-america/</link>
+      <pubDate>Tue, 01 Aug 2017 00:00:00 +0800</pubDate>
+      
+      <guid>https://blog.codinging.com/posts/appleid-america/</guid>
+      <description>随着苹果贵州数据中心建立和大面积下架 VPN 的行为，基本可以认为苹果不会在中国用户隐私问题上做什么坚持了。建议趁早将中国区的 apple id 迁移到美国区，防范可能发生的更恶劣事件。大致步骤如下： 如果订阅了 apple music，</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>synology on Yet Another Wizard</title>
+    <link>https://blog.codinging.com/tags/synology/</link>
+    <description>Recent content in synology on Yet Another Wizard</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Tue, 25 Jul 2017 00:00:00 +0800</lastBuildDate><atom:link href="https://blog.codinging.com/tags/synology/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>通过群晖恢复 Mac Time Machine 备份</title>
+      <link>https://blog.codinging.com/posts/synology-restore-time-machine/</link>
+      <pubDate>Tue, 25 Jul 2017 00:00:00 +0800</pubDate>
+      
+      <guid>https://blog.codinging.com/posts/synology-restore-time-machine/</guid>
+      <description>排查一个 ruby 环境问题卸载了 homebrew，删了一些路径，结果导致整个 shell 环境有些错乱。无奈只能 time machine 恢复回上周备份。自从买了群晖之后还没有用过它自带的 time machine 恢复过，这次试试。 流程如下： 首先重启且按住 cmd+r 进入恢</description>
+    </item>
+    
+  </channel>
+</rss>
