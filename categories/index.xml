@@ -5,6 +5,7 @@
     <link>https://blog.codinging.com/categories/</link>
     <description>Recent content in Categories on Yet Another Wizard</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>zh-cn</language><atom:link href="https://blog.codinging.com/categories/index.xml" rel="self" type="application/rss+xml" />
+    <language>zh-cn</language>
+    <atom:link href="https://blog.codinging.com/categories/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>

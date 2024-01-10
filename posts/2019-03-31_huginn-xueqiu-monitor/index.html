@@ -95,15 +95,15 @@
         <div class="post_content markdown"><h2 id="20220417-更新">2022/04/17 更新</h2>
 <p>我目前使用的方案是 <a href="https://docs.rsshub.app/finance.html#xue-qiu">rsshub</a>，自己部署 freshrss，使用 reeder 订阅。稳定性和易用性都比下面的方案好了，更推荐。</p>
 <hr>
-<p>工作的时候没法做到时刻经常刷雪球，但是又不想错过某个用户的发言怎么办呢？解决办法就是 huginn + 钉钉群。
-<a href="https://github.com/huginn/huginn">huginn</a> 负责信息抓取、处理和调用钉钉群组机器人的 API，每 10 分钟在服务器上跑一次（过短可能触发雪球的防爬虫机制，我没有测试更短的间隔）。钉钉用来看消息。实现的效果如下图：
+<p>工作的时候没法做到时刻经常刷雪球，但是又不想错过某个用户的发言怎么办呢？解决办法就是 huginn + 钉钉群。<br>
+<a href="https://github.com/huginn/huginn">huginn</a> 负责信息抓取、处理和调用钉钉群组机器人的 API，每 10 分钟在服务器上跑一次（过短可能触发雪球的防爬虫机制，我没有测试更短的间隔）。钉钉用来看消息。实现的效果如下图：<br>
 <img src="https://i.loli.net/2020/03/08/7PVxZyOwlKh294C.png" alt=""></p>
 <h2 id="部署-huginn">部署 huginn</h2>
-<p>部署 huginn 需要一台 vps，推荐购买 <a href="https://www.linode.com/?r=338fb3f24f6fcc1dc4618f604eebdfb746b2331a">linode</a> 的机器。注意不能选择那些内存过小（如 128M）的 vps，huginn 对机器的要求稍微有些高
+<p>部署 huginn 需要一台 vps，推荐购买 <a href="https://www.linode.com/?r=338fb3f24f6fcc1dc4618f604eebdfb746b2331a">linode</a> 的机器。注意不能选择那些内存过小（如 128M）的 vps，huginn 对机器的要求稍微有些高<br>
 使用 docker 的部署方式可以选择用 iOS 上的 hyperapp 一键完成</p>
 <h2 id="雪球-scenario">雪球 scenario</h2>
-<p>整体结构图如下：
-<img src="https://i.loli.net/2020/03/08/9ozM2FwsYyQuDK6.png" alt="">
+<p>整体结构图如下：<br>
+<img src="https://i.loli.net/2020/03/08/9ozM2FwsYyQuDK6.png" alt=""><br>
 此处以抓取财主的发言做为例子</p>
 <h3 id="0-维护雪球-cookie">0. 维护雪球 cookie</h3>
 <p>新建一个 post agent，每 2 小时运行一次：</p>
@@ -121,7 +121,7 @@
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;output_mode&#34;</span>: <span style="color:#e6db74">&#34;clean&#34;</span>,
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;disable_redirect_follow&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span>
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>这一步核心目的是模拟登录一次雪球，获取到雪球自己主页的 js 回写的 cookie
+</span></span></code></pre></div><p>这一步核心目的是模拟登录一次雪球，获取到雪球自己主页的 js 回写的 cookie<br>
 然后去新建一个 credential，名叫 xueqiu_cookie。接一个 javascript agent</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#a6e22e">Agent</span>.<span style="color:#a6e22e">receive</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>() {
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">events</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">incomingEvents</span>();
@@ -135,7 +135,7 @@
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>这段 js 会把上一个 agent 获取到的 cookie 写到我们自己的 xueqiu_cookie 变量上</p>
 <h3 id="1-获取财主雪球主页列表">1. 获取财主雪球主页列表</h3>
-<p>接口可以通过 chrome 调试雪球的 PC 网站看到，就是一个普通的 get 请求。注意需要带上特定的 cookie
+<p>接口可以通过 chrome 调试雪球的 PC 网站看到，就是一个普通的 get 请求。注意需要带上特定的 cookie<br>
 新建一个 Website Agent，配置内容：</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;expected_update_period_in_days&#34;</span>: <span style="color:#e6db74">&#34;2&#34;</span>,
@@ -159,8 +159,8 @@
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>数据解析用的是 <a href="https://goessner.net/articles/JsonPath/">jsonpath</a>，template 字段可以对 jsonpath 得到的 value 做进一步的处理，而且可以写简单的逻辑。比如我这里的处理是过滤了 retweeted 为 null 的情况</p>
 <h3 id="2-将获取到的-html-转为-markdown">2. 将获取到的 html 转为 markdown</h3>
-<p>钉钉的群机器人接口支持 markdown 的渲染，所以这一步需要将雪球接口里获取到的 html 内容转为 markdown
-至于如何用 js 实现这个转换，可以去 github 上搜索，相应的库并不少。但是因为 huginn 无法使用 npm 和引入外部的 js，所以我这里找了一个非常简单的实现去做转换
+<p>钉钉的群机器人接口支持 markdown 的渲染，所以这一步需要将雪球接口里获取到的 html 内容转为 markdown<br>
+至于如何用 js 实现这个转换，可以去 github 上搜索，相应的库并不少。但是因为 huginn 无法使用 npm 和引入外部的 js，所以我这里找了一个非常简单的实现去做转换<br>
 新建一个 huginn 的 javascript agent，js 的部分如下。这里我改了原脚本对 img 的处理，直接去掉了所有图片，原因是钉钉不支持 markdown 对图片大小的调整</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">toMarkdown</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">string</span>) {
 </span></span><span style="display:flex;"><span>  
@@ -363,7 +363,7 @@
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;no_merge&#34;</span>: <span style="color:#e6db74">&#34;false&#34;</span>,
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;output_mode&#34;</span>: <span style="color:#e6db74">&#34;clean&#34;</span>
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>credential 里是我的钉钉群机器人的 url，这个 url 在添加群机器人后可以获得
+</span></span></code></pre></div><p>credential 里是我的钉钉群机器人的 url，这个 url 在添加群机器人后可以获得<br>
 这里需要注意的是每个字段都需要做 escape，如 <code>{{title | escape}}</code> 。效果也可以随意调整，钉钉的文档在 <a href="https://open-doc.dingtalk.com/microapp/serverapi2/qf2nxq#a-nameytovydamarkdown%E7%B1%BB%E5%9E%8B">这里</a></p>
 </div>
         <div class="post_footer">
@@ -468,7 +468,7 @@ code.has-jax {
 
 
 
-<script type="application/javascript">
+<script>
 var doNotTrack = false;
 if (!doNotTrack) {
 	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
