@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Workflow on Yet Another Wizard</title>
-    <link>https://blog.codinging.com/tags/workflow/</link>
+    <link>http://localhost:1313/tags/workflow/</link>
     <description>Recent content in Workflow on Yet Another Wizard</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <lastBuildDate>Sun, 31 Mar 2019 00:00:00 +0800</lastBuildDate>
-    <atom:link href="https://blog.codinging.com/tags/workflow/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/tags/workflow/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>使用 huginn 关注雪球用户发言</title>
-      <link>https://blog.codinging.com/posts/2019-03-31_huginn-xueqiu-monitor/</link>
+      <link>http://localhost:1313/posts/2019-03-31_huginn-xueqiu-monitor/</link>
       <pubDate>Sun, 31 Mar 2019 00:00:00 +0800</pubDate>
-      <guid>https://blog.codinging.com/posts/2019-03-31_huginn-xueqiu-monitor/</guid>
+      <guid>http://localhost:1313/posts/2019-03-31_huginn-xueqiu-monitor/</guid>
       <description>2022/04/17 更新 我目前使用的方案是 rsshub，自己部署 freshrss，使用 reeder 订阅。稳定性和易用性都比下面的方案好了，更推荐。 工作的时候没法做到时刻经常刷雪球，但是又不想错过某个用户的发言怎么办呢？解决办法就</description>
     </item>
   </channel>

@@ -2,38 +2,38 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Trip on Yet Another Wizard</title>
-    <link>https://blog.codinging.com/tags/trip/</link>
+    <link>http://localhost:1313/tags/trip/</link>
     <description>Recent content in Trip on Yet Another Wizard</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <lastBuildDate>Mon, 01 Jan 2024 00:00:00 +0800</lastBuildDate>
-    <atom:link href="https://blog.codinging.com/tags/trip/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/tags/trip/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>马来西亚游记</title>
-      <link>https://blog.codinging.com/posts/2024-01-01_malaysia-trip/</link>
+      <link>http://localhost:1313/posts/2024-01-01_malaysia-trip/</link>
       <pubDate>Mon, 01 Jan 2024 00:00:00 +0800</pubDate>
-      <guid>https://blog.codinging.com/posts/2024-01-01_malaysia-trip/</guid>
+      <guid>http://localhost:1313/posts/2024-01-01_malaysia-trip/</guid>
       <description>时间：2023/12/30 - 2014/01/06 用到的信用卡权益/里程/租车/酒店积分汇总 接送机：浦发 AE 白【家 -&amp;gt; 萧山机场】，邮储鼎致白【萧山机场 -&amp;gt; 家】 机场贵宾厅：中信万豪金【吉隆坡 v22】 万豪：槟城万怡【3晚，3480</description>
     </item>
     <item>
       <title>日本游记2</title>
-      <link>https://blog.codinging.com/posts/2020-01-28_japan-trip/</link>
+      <link>http://localhost:1313/posts/2020-01-28_japan-trip/</link>
       <pubDate>Tue, 28 Jan 2020 00:00:00 +0800</pubDate>
-      <guid>https://blog.codinging.com/posts/2020-01-28_japan-trip/</guid>
+      <guid>http://localhost:1313/posts/2020-01-28_japan-trip/</guid>
       <description>时间：2020/01/16 - 2020/01/25 去年过年就是在日本，今年没找到其他特别合适的地方，所以还是决定去日本跨年了 整体行程：杭州 -&amp;gt; 上海 -&amp;gt; 东京 -&amp;gt; 北海道若干城市 -&amp;gt; 东京 -&amp;gt; 上海 -&amp;gt; 杭州 用到的信用卡权益/里程/酒店积分汇总</description>
     </item>
     <item>
       <title>日本游记</title>
-      <link>https://blog.codinging.com/posts/2019-02-11_japan-trip/</link>
+      <link>http://localhost:1313/posts/2019-02-11_japan-trip/</link>
       <pubDate>Mon, 18 Feb 2019 00:00:00 +0800</pubDate>
-      <guid>https://blog.codinging.com/posts/2019-02-11_japan-trip/</guid>
+      <guid>http://localhost:1313/posts/2019-02-11_japan-trip/</guid>
       <description>时间：2019/02/03 - 2019/02/10 用到的信用卡权益/里程/酒店积分汇总 机票：BA 里程兑换日航，PVG（上海浦东）- KIX（大阪关西），去程商务舱，回程经济舱。两人共计：45000 里程 接送机：平安大白【虹桥</description>
     </item>
     <item>
       <title>泰国游记</title>
-      <link>https://blog.codinging.com/posts/2018-01-06_thailand-trip/</link>
+      <link>http://localhost:1313/posts/2018-01-06_thailand-trip/</link>
       <pubDate>Sat, 06 Jan 2018 00:00:00 +0800</pubDate>
-      <guid>https://blog.codinging.com/posts/2018-01-06_thailand-trip/</guid>
+      <guid>http://localhost:1313/posts/2018-01-06_thailand-trip/</guid>
       <description>日期：12.28 - 1.1，共 5 天，请假 2 天 其实我已经去过一次泰国了，这次主要是陪女友玩。前两天在曼谷，后三天在普吉岛。 把兴业行悠白年底要过期的接送机一把梭了，定了三次国内接送机、两次曼谷接送机。兴业的</description>
     </item>
   </channel>
